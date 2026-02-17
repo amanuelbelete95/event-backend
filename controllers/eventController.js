@@ -44,8 +44,6 @@ export const getallEvents = async (req, res) => {
   }
 };
 
-// get single event
-
 export const getSingleEvent = async (req, res) => {
   try {
     const { event_id } = req.params;
@@ -77,7 +75,6 @@ export const getSingleEvent = async (req, res) => {
   }
 };
 
-// Update an event
 export const updateEvent = async (req, res) => {
   try {
     const { event_id } = req.params;
