@@ -87,7 +87,7 @@ export const updateEvent = async (req, res) => {
         code: 400,
       });
     }
-    const { name, location } = req.body;
+    const { name, location, event_date, event_status } = req.body;
 
     if (!name || !location) {
       return res.status(404).json({
@@ -97,15 +97,16 @@ export const updateEvent = async (req, res) => {
     }
     const updatedEvent = await pool.query(
       `update event 
-       set name = $1,location = $2
-       where event_id = $3
+       set name = $1,location = $2, event_status = $3, event_date = $4
+       where event_id = $5
        returning
        *
       `,
-      [name, location, event_id]
+      [name, location, event_status, event_date, event_id]
     );
     res.json(updatedEvent.rows[0]);
   } catch (error) {
+    console.log("error", error);
     return res.status(500).json({
       message: 'Internal Server Error: An unexpected error occurred.',
       code: 500,
