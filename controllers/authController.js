@@ -15,20 +15,26 @@ const createUser = async (userName, password, role) => {
 
 export const registerUser = async (req, res) => {
     try {
-        const { userName, role, password } = req.body;
+        const { username, password, confirmPassword } = req.body;
 
-        if (!userName || !password) {
+        if (!username || !password || !confirmPassword) {
             return res.status(400).json({
                 message: 'Please the provide the fields to register the user',
             });
         }
+        if (password !== confirmPassword) {
+            return res.status(402).json({
+                message: "The password should be the same"
+            })
+        }
 
-        const user = await pool.query('SELECT * FROM users WHERE userName = $1', [userName]);
+        // Check if the user exist already
+        const user = await pool.query('SELECT * FROM users WHERE userName = $1', [username]);
         if (user.rows.length > 0) {
             return res.status(400).json({ message: 'User already exists' });
         }
         // Register the new User
-        const newUser = await createUser(userName, password, role);
+        const newUser = await createUser(username, password, role);
         res.status(201).json({ message: `User with ${newUser.userName} created successfully`, user: newUser });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
@@ -50,6 +56,7 @@ export const logInUser = async (req, res) => {
         if (user.rows.length === 0) {
             return res.status(404).json({ message: `The user doesn't exist` })
         }
+
         const isMatch = await bcrypt.compare(password, user.rows[0].password)
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credential" })
@@ -64,7 +71,8 @@ export const logInUser = async (req, res) => {
                 id: user.rows[0].id,
                 role: user.rows[0].role,
                 username: user.rows[0].username,
-            }
+            },
+            message: "You have successfully loged in"
         })
     } catch (error) {
         console.error("Login error:", error);
