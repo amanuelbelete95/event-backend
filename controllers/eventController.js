@@ -129,12 +129,14 @@ export const deleteEvent = async (req, res) => {
       `,
       [event_id]
     );
-    return res.json({
-      message: 'Event deleted successfully',
-      event: deletedEvent.rows[0],
-    });
+    if (deletedEvent.rowCount === 0) {
+      return res.status(404).json({
+        message: 'Event not found.',
+        code: 404,
+      });
+    }
+    return res.status(200).send();
   } catch (error) {
-    console.error('Error deleting event:', error.message);
     return res
       .status(500)
       .json({
