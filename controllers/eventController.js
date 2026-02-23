@@ -131,11 +131,11 @@ export const deleteEvent = async (req, res) => {
     );
     if (deletedEvent.rowCount === 0) {
       return res.status(404).json({
-        message: 'Event not found.',
+        message: 'Event is already deleted.',
         code: 404,
       });
     }
-    return res.status(200).send();
+    return res.status(200).json({ message: "deleted successfully" });
   } catch (error) {
     return res
       .status(500)
