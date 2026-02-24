@@ -15,7 +15,7 @@ create table users (
   role VARCHAR(200)
 );
 
-create table event_order (
+create table event_registration (
   id bigserial primary key,
 
   event_id integer not null
