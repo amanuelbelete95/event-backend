@@ -1,10 +1,10 @@
 create database events;
 
 create table event (
-  event_id serial primary key,
+  id serial primary key,
   name VARCHAR(200),
-  event_date date,
-  event_status VARCHAR(200),
+  date date,
+  status VARCHAR(200),
   description TEXT
 );
 
@@ -36,3 +36,8 @@ create table users (
   password VARCHAR(250),
   role VARCHAR(200)
 );
+
+create table event_order (
+  id bigserial not null primary key,
+  event_id
+)

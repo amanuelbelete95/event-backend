@@ -46,8 +46,8 @@ export const getallEvents = async (req, res) => {
 
 export const getSingleEvent = async (req, res) => {
   try {
-    const { event_id } = req.params;
-    if (!event_id) {
+    const { id } = req.params;
+    if (!id) {
       return res.status(400).json({
         message: 'Bad Request: Event ID is required.',
         code: 400,
@@ -55,13 +55,13 @@ export const getSingleEvent = async (req, res) => {
     }
 
     const getEvent = await pool.query(
-      `select * from event where event_id = $1`,
-      [event_id]
+      `select * from event where id = $1`,
+      [id]
     );
 
     if (getEvent.rows.length === 0) {
       return res.status(404).json({
-        message: `Event with ID ${event_id} not found.`,
+        message: `Event with ID ${id} not found.`,
         code: 404,
       });
     }
@@ -77,8 +77,8 @@ export const getSingleEvent = async (req, res) => {
 
 export const updateEvent = async (req, res) => {
   try {
-    const { event_id } = req.params;
-    if (!event_id) {
+    const { id } = req.params;
+    if (!id) {
       return res.status(400).json({
         message: 'Bad Request: Event ID is required.',
         code: 400,
@@ -95,11 +95,11 @@ export const updateEvent = async (req, res) => {
     const updatedEvent = await pool.query(
       `update event 
        set name = $1,location = $2, event_status = $3, event_date = $4
-       where event_id = $5
+       where id = $5
        returning
        *
       `,
-      [name, location, event_status, event_date, event_id]
+      [name, location, event_status, event_date, id]
     );
     res.json(updatedEvent.rows[0]);
   } catch (error) {
@@ -113,8 +113,8 @@ export const updateEvent = async (req, res) => {
 
 export const deleteEvent = async (req, res) => {
   try {
-    const { event_id } = req.params;
-    if (!event_id) {
+    const { id } = req.params;
+    if (!id) {
       return res.status(400).json({
         message: 'Bad Request: Event ID is required.',
         code: 400,
@@ -123,11 +123,11 @@ export const deleteEvent = async (req, res) => {
     const deletedEvent = await pool.query(
       `
        delete from event 
-       where event_id = $1
+       where id = $1
        returning
          *
       `,
-      [event_id]
+      [id]
     );
     if (deletedEvent.rowCount === 0) {
       return res.status(404).json({
@@ -137,6 +137,7 @@ export const deleteEvent = async (req, res) => {
     }
     return res.status(200).json({ message: "deleted successfully" });
   } catch (error) {
+    console.log(error)
     return res
       .status(500)
       .json({
