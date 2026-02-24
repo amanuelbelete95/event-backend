@@ -2,22 +2,24 @@ import pool from '../db.js';
 
 export const createEvent = async (req, res) => {
   try {
-    const { name, location, event_date, event_status, description } = req.body;
-    if (!name || !location || !event_date || !event_status) {
+    const { name, location, event_date, event_status, description, capacity } = req.body;
+    if (!name || !location || !event_date || !event_status || !capacity) {
       return res.status(400).json({
         message: 'Bad Request: All fields are required.',
         code: 400,
       });
     }
     const newEvent = await pool.query(
-      `insert into event (name,location,event_date,event_status,description)  
-       values ($1, $2, $3, $4, $5)
+      `insert into event (name,location,event_date,event_status, capacity, description)  
+       values ($1, $2, $3, $4, $5, $6)
        returning *
       `,
-      [name, location, event_date, event_status, description]
+      [name, location, event_date, event_status, capacity, description]
     );
     res.json(newEvent.rows[0]);
   } catch (error) {
+
+    console.log("event", error)
     return res.status(500).json({
       message: 'Internal Server Error: An unexpected error occurred.',
       code: 500,
@@ -37,6 +39,7 @@ export const getallEvents = async (req, res) => {
     }
     res.json(allEvents.rows);
   } catch (error) {
+    console.log("getEvents", error);
     return res.status(500).json({
       message: 'Internal Server Error: An unexpected error occurred.',
       code: 500,

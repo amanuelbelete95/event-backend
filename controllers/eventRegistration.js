@@ -1,32 +1,33 @@
 import pool from '../db.js';
 
-import { getallEvents } from './eventController.js';
-import { getallUsers } from './authController.js';
-
 export const registerToEvent = async (req, res) => {
     try {
         const { event_id, user_id, join_date, reason } = req.body;
-        if (!event_id || !user_id) {
-            return res.status(400).json({
-                message: 'Bad Request: All fields are required.',
-            });
-        }
-        // Check if the event and user is valid and present in the database
 
-        const events = await getallEvents();
-        const users = await getallUsers();
-        const findEvent = events.find(event => event.id === event_id);
-        const findUser = users.find(user => user.id === user_id);
+        const eventsResult = await pool.query(`select * from event where id = $1`, [
+            event_id,
+        ]);
+        const usersResult = await pool.query(`select * from users where id = $1`, [
+            user_id,
+        ]);
 
-        if (!findEvent && !findUser) {
-            return res.json({ message: "No event or user is found" });
+        if (eventsResult.rows.length === 0) {
+            return res.status(404).json({ message: 'Event not found' });
         }
-        // Check for user event and user if already registered
-        const registeredEvents = await getAllRegisteredEvents();
-        const joinedEvents = registeredEvents.filter(event => event.id === event_id || event.user_id === user_id);
-        if (joinedEvents) {
-            return res.json({ message: "Duplicate event or user" });
+        if (usersResult.rows.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
         }
+
+        const registeredEvents = await pool.query(
+            `select * from event_registration where event_id = $1 and user_id = $2`,
+            [event_id, user_id]
+        );
+        if (registeredEvents.rows.length > 0) {
+            return res
+                .status(409)
+                .json({ message: 'User already registered for this event' });
+        }
+
         const event = await pool.query(
             `insert into event_registration (event_id,user_id,join_date,reason)  
              values ($1, $2, $3, $4)
@@ -36,7 +37,7 @@ export const registerToEvent = async (req, res) => {
         );
         res.json(event.rows[0]);
     } catch (error) {
-        console.log("error", error);
+        console.log('error', error);
         return res.status(500).json({
             message: 'Internal Server Error: An unexpected error occurred.',
             code: 500,
@@ -44,17 +45,16 @@ export const registerToEvent = async (req, res) => {
     }
 };
 
-
-const getAllRegisteredEvents = async (req, res) => {
+export const getallRegisteredEvents = async (req, res) => {
     try {
-        const allRegisteredEvents = await pool.query(`select * from event_registration`);
-        if (allRegisteredEvents.rows.length === 0) {
+        const allEvents = await pool.query(`select * from event_registration`);
+        if (allEvents.rows.length === 0) {
             return res.status(404).json({
-                message: 'No events found.',
+                message: 'No registered event found.',
                 code: 404,
             });
         }
-        res.json(allRegisteredEvents.rows);
+        res.json(allEvents.rows);
     } catch (error) {
         return res.status(500).json({
             message: 'Internal Server Error: An unexpected error occurred.',

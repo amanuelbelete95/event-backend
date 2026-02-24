@@ -17,7 +17,6 @@ create table users (
 
 create table event_registration (
   id bigserial primary key,
-
   event_id integer not null
     references event(id)
     on delete cascade,
