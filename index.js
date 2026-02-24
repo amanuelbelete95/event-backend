@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import express from 'express';
 import { logInUser, registerUser, Me } from './controllers/authController.js';
 import { createEvent, deleteEvent, getSingleEvent, updateEvent, getallEvents } from './controllers/eventController.js';
+import { registerToEvent } from './controllers/eventRegistration.js';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -32,6 +33,10 @@ app.get('/api/events/:id', getSingleEvent);
 app.put('/api/events/:id/update', updateEvent);
 // delete event
 app.delete('/api/events/:id/delete', deleteEvent);
+
+
+// Event Registration route
+app.post('/api/event-register', registerToEvent);
 
 app.listen(PORT, () => {
   console.log('Sever has started');
