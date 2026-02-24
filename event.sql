@@ -8,28 +8,6 @@ create table event (
   description TEXT
 );
 
-alter table event
-add column location VARCHAR(200);
-
-insert into
-  event (
-    name,
-    event_date,
-    event_status,
-    description,
-    location
-  )
-values
-  ();
-
-select
-  *
-from
-  event;
-
-  gg_
-
-
 create table users (
   id serial primary key,
   userName VARCHAR(200) unique not null,
@@ -38,6 +16,19 @@ create table users (
 );
 
 create table event_order (
-  id bigserial not null primary key,
-  event_id
-)
+  id bigserial primary key,
+
+  event_id integer not null
+    references event(id)
+    on delete cascade,
+
+  user_id integer not null
+    references users(id)
+    on delete cascade,
+
+  join_date timestamp default now(),
+
+  reason text not null,
+
+  unique (event_id, user_id)
+);
