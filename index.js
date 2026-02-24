@@ -29,9 +29,9 @@ app.get('/api/events', getallEvents);
 // get single event
 app.get('/api/events/:event_id', getSingleEvent);
 // Update an event
-app.put('/api/events/:event_id', updateEvent);
+app.put('/api/events/:event_id/update', updateEvent);
 // delete event
-app.delete('/api/events/:event_id', deleteEvent);
+app.delete('/api/events/:event_id/delete', deleteEvent);
 
 app.listen(PORT, () => {
   console.log('Sever has started');

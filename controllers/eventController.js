@@ -44,8 +44,6 @@ export const getallEvents = async (req, res) => {
   }
 };
 
-// get single event
-
 export const getSingleEvent = async (req, res) => {
   try {
     const { event_id } = req.params;
@@ -77,7 +75,6 @@ export const getSingleEvent = async (req, res) => {
   }
 };
 
-// Update an event
 export const updateEvent = async (req, res) => {
   try {
     const { event_id } = req.params;
@@ -132,12 +129,14 @@ export const deleteEvent = async (req, res) => {
       `,
       [event_id]
     );
-    return res.json({
-      message: 'Event deleted successfully',
-      event: deletedEvent.rows[0],
-    });
+    if (deletedEvent.rowCount === 0) {
+      return res.status(404).json({
+        message: 'Event is already deleted.',
+        code: 404,
+      });
+    }
+    return res.status(200).json({ message: "deleted successfully" });
   } catch (error) {
-    console.error('Error deleting event:', error.message);
     return res
       .status(500)
       .json({
