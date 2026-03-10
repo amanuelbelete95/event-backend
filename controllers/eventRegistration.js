@@ -4,6 +4,10 @@ export const registerToEvent = async (req, res) => {
     try {
         const { event_id, user_id, join_date, reason } = req.body;
 
+        if (!event_id || !user_id || !reason) {
+            return res.status(404).json({ message: 'Please provide all required fields before joining' });
+        }
+
         const eventsResult = await pool.query(`select * from event where id = $1`, [
             event_id,
         ]);
@@ -35,7 +39,12 @@ export const registerToEvent = async (req, res) => {
              `,
             [event_id, user_id, join_date, reason]
         );
-        res.json(event.rows[0]);
+
+
+        const registration = event.rows[0];
+        registration["event"] = eventsResult.rows[0];
+        registration["user"] = usersResult.rows[0];
+        res.json(registration);
     } catch (error) {
         console.log('error', error);
         return res.status(500).json({

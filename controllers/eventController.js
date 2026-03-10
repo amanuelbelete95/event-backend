@@ -87,7 +87,7 @@ export const updateEvent = async (req, res) => {
         code: 400,
       });
     }
-    const { name, location, event_date, event_status } = req.body;
+    const { name, location, event_date, event_status, description } = req.body;
 
     if (!name || !location) {
       return res.status(404).json({
@@ -97,12 +97,12 @@ export const updateEvent = async (req, res) => {
     }
     const updatedEvent = await pool.query(
       `update event 
-       set name = $1,location = $2, event_status = $3, event_date = $4
-       where id = $5
+       set name = $1,location = $2, event_status = $3, event_date = $4, description = $5
+       where id = $6
        returning
        *
       `,
-      [name, location, event_status, event_date, id]
+      [name, location, event_status, event_date, description, id]
     );
     res.json(updatedEvent.rows[0]);
   } catch (error) {
