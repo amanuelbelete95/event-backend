@@ -1,6 +1,6 @@
 import pool from '../db.js';
-import { getUser } from './authController.js';
-import { getEvent, getSingleEvent } from './eventController.js';
+import { getUser } from '../models/users/utils/getUser.js';
+import { getEvent } from '../models/events/utils/getEvent.js';
 
 export const registerToEvent = async (req, res) => {
     try {
