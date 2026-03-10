@@ -1,4 +1,6 @@
 import pool from '../db.js';
+import { getUser } from './authController.js';
+import { getEvent, getSingleEvent } from './eventController.js';
 
 export const registerToEvent = async (req, res) => {
     try {
@@ -20,7 +22,7 @@ export const registerToEvent = async (req, res) => {
         }
         if (usersResult.rows.length === 0) {
             return res.status(404).json({ message: 'User not found' });
-        }
+        }   
 
         const registeredEvents = await pool.query(
             `select * from event_registration where event_id = $1 and user_id = $2`,
@@ -44,6 +46,7 @@ export const registerToEvent = async (req, res) => {
         const registration = event.rows[0];
         registration["event"] = eventsResult.rows[0];
         registration["user"] = usersResult.rows[0];
+        registration["status"] = 'joined';
         res.json(registration);
     } catch (error) {
         console.log('error', error);
@@ -62,9 +65,22 @@ export const getallRegisteredEvents = async (req, res) => {
                 message: 'No registered event found.',
                 code: 404,
             });
-        }
-        res.json(allEvents.rows);
+        };
+        const events = await Promise.all(
+         allEvents.rows.map(async (row) => {
+        const event = await getEvent(row.event_id);
+        const user = await getUser(row.user_id);
+        return {
+          ...row,
+          event,
+          user,
+        };
+      })
+    );
+
+    return res.json(events);
     } catch (error) {
+        console.log("error", error)
         return res.status(500).json({
             message: 'Internal Server Error: An unexpected error occurred.',
             code: 500,

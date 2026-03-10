@@ -106,6 +106,35 @@ export const Me = async (req, res) => {
   });
 };
 
+
+export const getUser = async (id) => {
+  try {
+  if (!id) {
+      return res.status(400).json({
+        message: 'Bad Request: User ID is required.',
+        code: 400,
+      });
+    }
+
+    const getUser = await pool.query(
+      `select * from users where id = $1`,
+      [id]
+    );
+
+    if (getUser.rows.length === 0) {
+      return res.status(404).json({
+        message: `User with ID ${id} not found.`,
+        code: 404,
+      });
+    }
+    const user = getUser.rows[0];
+    return user;
+  }
+    catch (error) {
+    throw new Error(error.message)
+  }
+}
+
 export const getallUsers = async (req, res) => {
   try {
     const allUsers = await pool.query(`select * from users`);

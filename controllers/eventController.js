@@ -78,6 +78,33 @@ export const getSingleEvent = async (req, res) => {
   }
 };
 
+export const getEvent = async (id) => {
+  try {
+    if (!id) {
+      return res.status(400).json({
+        message: 'Bad Request: Event ID is required.',
+        code: 400,
+      });
+    }
+
+    const getEvent = await pool.query(
+      `select * from event where id = $1`,
+      [id]
+    );
+
+    if (getEvent.rows.length === 0) {
+      return res.status(404).json({
+        message: `Event with ID ${id} not found.`,
+        code: 404,
+      });
+    }
+    const event = getEvent.rows[0];
+    return event;
+  } catch (error) {
+   throw new Error(error.message)
+  }
+};
+
 export const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
