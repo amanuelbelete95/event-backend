@@ -83,7 +83,7 @@ export const logInUser = async (req, res) => {
       user: {
         id: user.rows[0].id,
         role: user.rows[0].role,
-        username: user.rows[0].userName,
+        username: user.rows[0].username,
       },
       message: 'You have successfully loged in',
     });
