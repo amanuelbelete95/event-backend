@@ -31,3 +31,9 @@ create table event_registration (
 
   unique (event_id, user_id)
 );
+
+
+-- Alter the table to register the status of the event
+
+ALTER TABLE event
+ADD COLUMN registration_status BOOLEAN DEFAULT FALSE;
