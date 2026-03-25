@@ -24,11 +24,21 @@ export const registerToEvent = async (req, res) => {
     if (eventsResult.rows.length === 0) {
       return res.status(404).json({ message: 'Event not found' });
     }
-
+    
     if (eventsResult.rows[0].event_status !== "published") {
       return res.status(400).json({ message: 'Event is not published' });
     }
+    
 
+    // the event date has passed
+
+      const eventDate = new Date(eventsResult.rows[0].event_date);
+      const currentDate = new Date();
+      if (eventDate < currentDate) {
+        return res.status(400).json({ message: 'Event date has passed. Registration is closed.' });
+      }
+
+  
     if (usersResult.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -56,13 +66,26 @@ export const registerToEvent = async (req, res) => {
       [event_id]
     );
 
+    // update registration_count for th'e event
+    await pool.query(
+      `update event set registration_count = registration_count + 1 where id = $1`,
+      [event_id]
+    );
+
+    // if the event capacity is reached then close the registration for the event
+    const eventCapacity = eventsResult.rows[0].capacity;
+    const registrationCount = eventsResult.rows[0].registration_count + 1; // add 1 to the current registration count
+    if (registrationCount >= eventCapacity) {
+      return res.status(400).json({ message: 'Event capacity reached. Registration is closed.' });
+    }
     const updatedEvent = await pool.query(`select * from event where id = $1`, [
       event_id,
     ]);
 
     const registration = event.rows[0];
-    registration['event'] = { ...updatedEvent.rows[0], has_registered: true };
+    registration['event'] = updatedEvent.rows[0];
     registration['user'] = usersResult.rows[0];
+
     res.json(registration);
   } catch (error) {
     console.log('error', error);
