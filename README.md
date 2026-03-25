@@ -64,35 +64,11 @@ cd event-management-backend
 npm install
 🔑 Environment Variables
 
-Create a .env file in the root directory:
-
-PORT=4000
-DATABASE_URL=postgresql://username:password@localhost:5432/event
-JWT_SECRET=your_secret_key
 ▶️ Running the Server
 npm run dev
-
-or
-
-npm start
 
 Server will run on:
 👉 http://localhost:4000
 
-🗄️ Database Setup
-
-Create a PostgreSQL database:
-CREATE DATABASE event;
-Update your .env file with the correct credentials.
-Run migrations (if applicable):
-npm run migrate
-
-📡 API Endpoints (Sample)
-Events
-GET    /api/events
-POST   /api/events
-GET    /api/events/:id
-PUT    /api/events/:id
-DELETE /api/events/:id
 🧪 Testing
 npm test
