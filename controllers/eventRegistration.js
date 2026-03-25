@@ -13,6 +13,7 @@ export const registerToEvent = async (req, res) => {
         .json({ message: 'Please provide all required fields before joining' });
     }
 
+
     const eventsResult = await pool.query(`select * from event where id = $1`, [
       event_id,
     ]);
@@ -23,6 +24,11 @@ export const registerToEvent = async (req, res) => {
     if (eventsResult.rows.length === 0) {
       return res.status(404).json({ message: 'Event not found' });
     }
+
+    if (eventsResult.rows[0].event_status !== "published") {
+      return res.status(400).json({ message: 'Event is not published' });
+    }
+
     if (usersResult.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
