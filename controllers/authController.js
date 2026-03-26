@@ -2,19 +2,19 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../db.js';
 
-const createUser = async (userName, password, role) => {
+const createUser = async (firstname, lastname, userName, password, confirmPassword, role) => {
   const hashedPassword = await bcrypt.hash(password, 10);
-  console.log('hashedPassword', hashedPassword);
+  const hashedConfirmPassword = await bcrypt.hash(confirmPassword, 10);
   const newUser = await pool.query(
-    'INSERT INTO users (userName, password, role) VALUES ($1, $2, $3) RETURNING *',
-    [userName, hashedPassword, role]
+    'INSERT INTO users (firstname, lastname, userName, password, confirmPassword, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+    [firstname, lastname, userName, hashedPassword, hashedConfirmPassword, role]
   );
   return newUser.rows[0];
 };
 
 export const registerUser = async (req, res) => {
   try {
-    const { username, password, confirmPassword } = req.body;
+    const { firstname, lastname, username, password, confirmPassword, role } = req.body;
 
     if (!username || !password || !confirmPassword) {
       return res.status(400).json({
@@ -35,12 +35,13 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
     // Register the new User
-    const newUser = await createUser(username, password, req.body.role);
+    const newUser = await createUser(firstname, lastname, username, password, confirmPassword, role);
     res.status(201).json({
       message: `User with ${newUser.userName} created successfully`,
       user: newUser,
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -48,8 +49,6 @@ export const registerUser = async (req, res) => {
 export const logInUser = async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    console.log(req.body);
     if (!username || !password) {
       return res
         .status(400)
@@ -80,11 +79,7 @@ export const logInUser = async (req, res) => {
     );
     return res.status(200).json({
       token,
-      user: {
-        id: user.rows[0].id,
-        role: user.rows[0].role,
-        username: user.rows[0].username,
-      },
+      user: user.rows[0],
       message: 'You have successfully loged in',
     });
   } catch (error) {
