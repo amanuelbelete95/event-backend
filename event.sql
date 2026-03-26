@@ -37,3 +37,7 @@ create table event_registration (
 
 ALTER TABLE event
 ADD COLUMN registration_status BOOLEAN DEFAULT FALSE;
+
+-- add registration count to the event table
+ALTER TABLE event
+ADD COLUMN registration_count INTEGER DEFAULT 0;

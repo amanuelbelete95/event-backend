@@ -1,7 +1,6 @@
 import pool from '../db.js';
-import jwt from 'jsonwebtoken';
-import { getUser } from '../models/users/utils/getUser.js';
 import { getEvent } from '../models/events/utils/getEvent.js';
+import { getUser } from '../models/users/utils/getUser.js';
 
 export const registerToEvent = async (req, res) => {
   try {
@@ -20,13 +19,30 @@ export const registerToEvent = async (req, res) => {
     const usersResult = await pool.query(`select * from users where id = $1`, [
       user_id,
     ]);
-
+    
+    const event = eventsResult.rows[0];
+    const user = usersResult.rows[0];
     if (eventsResult.rows.length === 0) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    if (eventsResult.rows[0].event_status !== "published") {
+    if (event.event_status !== "published") {
       return res.status(400).json({ message: 'Event is not published' });
+    }
+
+
+    // the event date has 
+
+    const eventDate = new Date(event.event_date);
+    const currentDate = new Date();
+    if (eventDate < currentDate) {
+      return res.status(400).json({ message: 'Event date has passed. Registration is closed.' });
+    }
+    // if the event capacity is reached then close the registration for the event
+    const eventCapacity = event.capacity;
+    const registrationCount = event.registration_count + 1; // add 1 to the current registration count
+    if (registrationCount > eventCapacity) {
+      return res.status(400).json({ message: 'Event capacity reached. Registration is closed.' });
     }
 
     if (usersResult.rows.length === 0) {
@@ -43,7 +59,7 @@ export const registerToEvent = async (req, res) => {
         .json({ message: 'User already registered for this event' });
     }
 
-    const event = await pool.query(
+    const registration = await pool.query(
       `insert into event_registration (event_id,user_id,join_date,reason)  
              values ($1, $2, $3, $4)
              returning *
@@ -51,19 +67,28 @@ export const registerToEvent = async (req, res) => {
       [event_id, user_id, join_date, reason]
     );
 
+    // update registration status for the event to true if the registration is successful
     await pool.query(
       `update event set registration_status = true where id = $1`,
       [event_id]
     );
 
+    // update registration_count for the event by adding 1 to the current registration count
+    await pool.query(
+      `update event set registration_count = registration_count + 1 where id = $1`,
+      [event_id]
+    );
+
+
     const updatedEvent = await pool.query(`select * from event where id = $1`, [
       event_id,
     ]);
+        
+    const registrationData = registration.rows[0];
+    registrationData['event'] = updatedEvent.rows[0];
+    registrationData['user'] = user;
 
-    const registration = event.rows[0];
-    registration['event'] = { ...updatedEvent.rows[0], has_registered: true };
-    registration['user'] = usersResult.rows[0];
-    res.json(registration);
+    res.json(registrationData);
   } catch (error) {
     console.log('error', error);
     return res.status(500).json({
