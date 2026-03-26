@@ -1,25 +1,26 @@
 import cors from 'cors';
-import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 import express from 'express';
 import {
   logInUser,
-  registerUser,
   Me,
-  getallUsers,
+  registerUser,
 } from './controllers/authController.js';
 import {
   createEvent,
   deleteEvent,
+  getallEvents,
   getSingleEvent,
   updateEvent,
-  getallEvents,
 } from './controllers/eventController.js';
 import {
-  registerToEvent,
-  getallRegisteredEvents,
   checkUserRegistration,
+  getallRegisteredEvents,
+  registerToEvent,
 } from './controllers/eventRegistration.js';
-import dotenv from 'dotenv';
+import { getallUsers } from './controllers/userController.js';
+
+
 dotenv.config();
 
 // Configure express app
@@ -28,13 +29,15 @@ app.use(cors());
 app.use(express.json());
 const PORT = 4000;
 
-// Add user route
+// Auth route
 app.post('/api/register', registerUser);
 app.post('/api/login', logInUser);
+
+// User route
 app.post('/api/me', Me);
 app.get('/api/users', getallUsers);
 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
 // Event Route
 app.post('/api/events', createEvent);
 // get All Events
