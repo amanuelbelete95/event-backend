@@ -11,7 +11,8 @@ create table event (
 create table users (
   id serial primary key,
   username VARCHAR(200) unique not null,
-  password VARCHAR(250),
+  password VARCHAR(250) not null,
+  confirmPassword VARCHAR(250) not null,
   role VARCHAR(200)
 );
 
@@ -41,3 +42,9 @@ ADD COLUMN registration_status BOOLEAN DEFAULT FALSE;
 -- add registration count to the event table
 ALTER TABLE event
 ADD COLUMN registration_count INTEGER DEFAULT 0;
+
+
+-- add a column to the users table to store fisrtname and lastname
+ALTER TABLE users
+ADD COLUMN firstname VARCHAR(200),
+ADD COLUMN lastname VARCHAR(200);

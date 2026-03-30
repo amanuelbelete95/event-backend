@@ -1,6 +1,5 @@
 import pool from '../db.js';
-import { getEvent } from '../models/events/utils/getEvent.js';
-import { getUser } from '../models/users/utils/getUser.js';
+import jwt from 'jsonwebtoken';
 
 export const registerToEvent = async (req, res) => {
   try {
@@ -12,37 +11,39 @@ export const registerToEvent = async (req, res) => {
         .json({ message: 'Please provide all required fields before joining' });
     }
 
-
     const eventsResult = await pool.query(`select * from event where id = $1`, [
       event_id,
     ]);
     const usersResult = await pool.query(`select * from users where id = $1`, [
       user_id,
     ]);
-    
+
     const event = eventsResult.rows[0];
     const user = usersResult.rows[0];
     if (eventsResult.rows.length === 0) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    if (event.event_status !== "published") {
+    if (event.event_status !== 'published') {
       return res.status(400).json({ message: 'Event is not published' });
     }
 
-
-    // the event date has 
+    // the event date has
 
     const eventDate = new Date(event.event_date);
     const currentDate = new Date();
     if (eventDate < currentDate) {
-      return res.status(400).json({ message: 'Event date has passed. Registration is closed.' });
+      return res
+        .status(400)
+        .json({ message: 'Event date has passed. Registration is closed.' });
     }
     // if the event capacity is reached then close the registration for the event
     const eventCapacity = event.capacity;
     const registrationCount = event.registration_count + 1; // add 1 to the current registration count
     if (registrationCount > eventCapacity) {
-      return res.status(400).json({ message: 'Event capacity reached. Registration is closed.' });
+      return res
+        .status(400)
+        .json({ message: 'Event capacity reached. Registration is closed.' });
     }
 
     if (usersResult.rows.length === 0) {
@@ -79,11 +80,10 @@ export const registerToEvent = async (req, res) => {
       [event_id]
     );
 
-
     const updatedEvent = await pool.query(`select * from event where id = $1`, [
       event_id,
     ]);
-        
+
     const registrationData = registration.rows[0];
     registrationData['event'] = updatedEvent.rows[0];
     registrationData['user'] = user;
@@ -99,42 +99,32 @@ export const registerToEvent = async (req, res) => {
 };
 
 // get all registered events for a user that signed in:
-
-// When the user sigin the only should see the events that they have registered for, so I need to get the user id from the token and then get all the events that the user has registered for and return it to the user.
-
-// What would be the best way to get all registered events for a user that signed in? should I create a new function in the utils folder to get all registered events for a user and then call it here or should I just write the query here and return the result?
 export const getallRegisteredEvents = async (req, res) => {
   try {
-    const { userId } = req.query;
-    let allEvents;
-    if (!userId) {
-      allEvents = await pool.query(`select * from event_registration`);
-    } else {
-      allEvents = await pool.query(
-        `select * from event_registration where user_id = $1`,
-        [userId]
-      );
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    if (allEvents.rows.length === 0) {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const result = await pool.query(
+      `SELECT er.*, e.name, e.description, e.event_date, e.location, e.capacity, e.registration_count, e.event_status
+       FROM event_registration er
+       JOIN event e ON er.event_id = e.id
+       WHERE er.user_id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
       return res.status(404).json({
         message: 'No registered event found.',
         code: 404,
       });
     }
-    const events = await Promise.all(
-      allEvents.rows.map(async (row) => {
-        const event = await getEvent(row.event_id);
-        const user = await getUser(row.user_id);
-        return {
-          ...row,
-          event,
-          user,
-        };
-      })
-    );
 
-    return res.json(events);
+    return res.json(result.rows);
   } catch (error) {
     console.log('error', error);
     return res.status(500).json({
