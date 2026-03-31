@@ -1,5 +1,5 @@
 import pool from '../db.js';
-
+import jwt from 'jsonwebtoken';
 export const createEvent = async (req, res) => {
   try {
     const { name, location, event_date, event_status, description, capacity } = req.body;
@@ -30,7 +30,25 @@ export const createEvent = async (req, res) => {
 
 export const getallEvents = async (req, res) => {
   try {
-    const allEvents = await pool.query(`select * from event`);
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const allEvents = await pool.query(`
+      SELECT 
+      e.*, 
+      EXISTS (
+          SELECT 1 
+          FROM event_registration er 
+          WHERE er.event_id = e.id 
+            AND er.user_id = $1
+      ) AS is_registered
+      FROM event e;
+      `, [userId]);
     if (allEvents.rows.length === 0) {
       return res.status(404).json({
         message: 'No events found.',
@@ -39,7 +57,7 @@ export const getallEvents = async (req, res) => {
     }
     res.json(allEvents.rows);
   } catch (error) {
-    console.log("getEvents", error);
+    console.log("error", error);
     return res.status(500).json({
       message: 'Internal Server Error: An unexpected error occurred.',
       code: 500,
@@ -57,9 +75,25 @@ export const getSingleEvent = async (req, res) => {
       });
     }
 
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
     const getEvent = await pool.query(
-      `select * from event where id = $1`,
-      [id]
+      `SELECT 
+       e.*, 
+      EXISTS (
+          SELECT 1 
+          FROM event_registration er 
+          WHERE er.event_id = e.id 
+          AND er.user_id = $1
+      ) AS is_registered
+      FROM event e where id = $2`,
+      [userId, id]
     );
 
     if (getEvent.rows.length === 0) {
@@ -75,33 +109,6 @@ export const getSingleEvent = async (req, res) => {
       message: 'Internal Server Error: An unexpected error occurred.',
       code: 500,
     });
-  }
-};
-
-export const getEvent = async (id) => {
-  try {
-    if (!id) {
-      return res.status(400).json({
-        message: 'Bad Request: Event ID is required.',
-        code: 400,
-      });
-    }
-
-    const getEvent = await pool.query(
-      `select * from event where id = $1`,
-      [id]
-    );
-
-    if (getEvent.rows.length === 0) {
-      return res.status(404).json({
-        message: `Event with ID ${id} not found.`,
-        code: 404,
-      });
-    }
-    const event = getEvent.rows[0];
-    return event;
-  } catch (error) {
-   throw new Error(error.message)
   }
 };
 

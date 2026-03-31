@@ -25,7 +25,7 @@ export const registerToEvent = async (req, res) => {
     }
 
     if (event.event_status !== 'published') {
-      return res.status(400).json({ message: 'Event is not published' });
+    return res.status(400).json({ message: 'Event is not published' });
     }
 
     // the event date has
@@ -66,12 +66,6 @@ export const registerToEvent = async (req, res) => {
              returning *
              `,
       [event_id, user_id, join_date, reason]
-    );
-
-    // update registration status for the event to true if the registration is successful
-    await pool.query(
-      `update event set registration_status = true where id = $1`,
-      [event_id]
     );
 
     // update registration_count for the event by adding 1 to the current registration count
