@@ -26,8 +26,8 @@ create table event_registration (
     references users(id)
     on delete cascade,
 
-  join_date timestamp default now(),
-
+  registered_on date default timestamp now(),
+  position VARCHAR(250),
   reason text not null,
 
   unique (event_id, user_id)
