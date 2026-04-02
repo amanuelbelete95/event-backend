@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 export const registerToEvent = async (req, res) => {
   try {
-    const { event_id, user_id, join_date, reason } = req.body;
+    const { event_id, user_id, reason, registered_on, position } = req.body;
 
     if (!event_id || !user_id || !reason) {
       return res
@@ -61,11 +61,11 @@ export const registerToEvent = async (req, res) => {
     }
 
     const registration = await pool.query(
-      `insert into event_registration (event_id,user_id,join_date,reason)  
-             values ($1, $2, $3, $4)
+      `insert into event_registration (event_id,user_id, reason, registered_on, position)  
+             values ($1, $2, $3, $4, $5)
              returning *
              `,
-      [event_id, user_id, join_date, reason]
+      [event_id, user_id, reason, registered_on, position]
     );
 
     // update registration_count for the event by adding 1 to the current registration count
